@@ -1,7 +1,7 @@
 //Core
 import React, { Component } from 'react';
 import { createPortal } from 'react-dom';
-import PropTypes from 'prop-types';
+//import PropTypes from 'prop-types';
 
 //Instruments
 import Styles from './styles.m.css';
@@ -9,9 +9,7 @@ import Styles from './styles.m.css';
 const portal = document.getElementById('spinner');
 
 export default class Spinner extends Component {
-    static propTypes = {
-        isSpinning: PropTypes.bool.isRequired,
-    };
+    
 
     render () {
         const { isSpinning } = this.props;
