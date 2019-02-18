@@ -1,5 +1,7 @@
 //Core
 import React, { Component } from 'react';
+import { Transition } from 'react-transition-group';
+import { fromTo } from 'gsap';
 
 //Components
 import { withProfile } from 'components/HOC/withProfile';
@@ -7,10 +9,10 @@ import StatusBar from 'components/StatusBar';
 import Composer from 'components/Composer';
 import Post from 'components/Post';
 import Spinner from 'components/Spinner';
+import Postman from 'components/Postman';
 
 //Instruments
 import Styles from './styles.m.css';
-import { getUniqueID, delay } from 'instruments';
 import Catcher from '../Catcher';
 import { api, TOKEN, GROUP_ID } from 'config/api';
 import { socket } from 'socket/init';
@@ -20,21 +22,22 @@ export default class Feed extends Component {
     state = {
         posts:          [],
         isPostFetching: false,
+        isPostmanIn:    true,
     };
 
     componentDidMount () {
         const { currentUserFirstName, currentUserLastName } = this.props;
-       
+
         this._fetchPosts();
 
         socket.emit('join', GROUP_ID);
 
         socket.on('create', (postJSON) =>{
-            const{ data: createdPost, meta } = JSON.parse(postJSON);
+            const { data: createdPost, meta } = JSON.parse(postJSON);
 
-            if(
-                `${currentUserFirstName} ${ currentUserLastName}` !==
-                '${meta.authorFirstName} ${meta.authorLastName}'
+            if (
+                `${currentUserFirstName} ${ currentUserLastName}`
+                !== '${meta.authorFirstName} ${meta.authorLastName}'
             ) {
                 this.setState(({ posts }) => ({
                     posts: [ createdPost, ...posts ],
@@ -43,11 +46,11 @@ export default class Feed extends Component {
         });
 
         socket.on('remove', (postJSON) =>{
-            const{ data: removedPost, meta } = JSON.parse(postJSON);
+            const { data: removedPost, meta } = JSON.parse(postJSON);
 
-            if(
-                `${currentUserFirstName} ${ currentUserLastName}` !==
-                '${meta.authorFirstName} ${meta.authorLastName}'
+            if (
+                `${currentUserFirstName} ${ currentUserLastName}`
+                !== '${meta.authorFirstName} ${meta.authorLastName}'
             ) {
                 this.setState(({ posts }) => ({
                     posts: posts.filter((post) => post.id !== removedPost.id),
@@ -56,11 +59,11 @@ export default class Feed extends Component {
         });
 
         socket.on('like', (postJSON) =>{
-            const{ data: likedPost, meta } = JSON.parse(postJSON);
-                     
+            const { data: likedPost, meta } = JSON.parse(postJSON);
+
             if (
-                `${currentUserFirstName} ${ currentUserLastName}` !==
-                '${meta.authorFirstName} ${meta.authorLastName}'
+                `${currentUserFirstName} ${ currentUserLastName}`
+                !== '${meta.authorFirstName} ${meta.authorLastName}'
             ) {
                 this.setState(({ posts }) => ({
                     posts: posts.map((post) => post.id === likedPost.id ? likedPost : post),
@@ -152,8 +155,28 @@ export default class Feed extends Component {
         }));
     }
 
+    _animateComposerEnter = (composer) => {
+        fromTo(composer, 1, {opacity: 0}, {opacity: 1});
+    }
+
+    _animatePostmanEnter = (postman) => {
+        fromTo(postman, 1, {opacity: 0, x: 400}, {opacity: 1, x: 0});
+    }
+
+    _changeIsPostmanIn = () => {
+        setTimeout(() => {
+            this.setState(() => ({
+                isPostmanIn: false,
+            }));
+        }, 4000);
+    }
+
+    _animatePostmanExiting = (postman) => {
+        fromTo(postman, 1, {opacity: 1, x: 0}, {opacity: 0, x: 300});
+    }
+
     render() {
-        const { posts, isPostFetching } = this.state;
+        const { posts, isPostFetching, isPostmanIn } = this.state;
 
         const postsJSX = posts.map((post) => {
             return (
@@ -172,8 +195,23 @@ export default class Feed extends Component {
             <section className = { Styles.feed }>
                 <Spinner isSpinning = { isPostFetching } />
                 <StatusBar />
-                <Composer _createPost = {  this._createPost } />
+                <Transition
+                    appear
+                    in
+                    timeout = { 1000 }
+                    onEnter = { this._animateComposerEnter } >
+                    <Composer _createPost = {  this._createPost } />
+                </Transition>
                 { postsJSX }
+                <Transition
+                    appear
+                    in = { isPostmanIn }
+                    timeout = { 1000 }
+                    onEnter = { this._animatePostmanEnter }
+                    onEntered = { this._changeIsPostmanIn }
+                    onExiting = { this._animatePostmanExiting } >
+                    <Postman/>
+                </Transition>
             </section>
         );
     }
