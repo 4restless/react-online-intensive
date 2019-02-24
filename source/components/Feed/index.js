@@ -10,6 +10,7 @@ import Composer from 'components/Composer';
 import Post from 'components/Post';
 import Spinner from 'components/Spinner';
 import Postman from 'components/Postman';
+import Counter from 'components/Counter';
 
 //Instruments
 import Styles from './styles.m.css';
@@ -36,8 +37,8 @@ export default class Feed extends Component {
             const { data: createdPost, meta } = JSON.parse(postJSON);
 
             if (
-                `${currentUserFirstName} ${ currentUserLastName}`
-                !== '${meta.authorFirstName} ${meta.authorLastName}'
+                `${currentUserFirstName} ${currentUserLastName}`
+                !== `${meta.authorFirstName} ${meta.authorLastName}`
             ) {
                 this.setState(({ posts }) => ({
                     posts: [ createdPost, ...posts ],
@@ -49,8 +50,8 @@ export default class Feed extends Component {
             const { data: removedPost, meta } = JSON.parse(postJSON);
 
             if (
-                `${currentUserFirstName} ${ currentUserLastName}`
-                !== '${meta.authorFirstName} ${meta.authorLastName}'
+                `${currentUserFirstName} ${currentUserLastName}`
+                !== `${meta.authorFirstName} ${meta.authorLastName}`
             ) {
                 this.setState(({ posts }) => ({
                     posts: posts.filter((post) => post.id !== removedPost.id),
@@ -60,10 +61,9 @@ export default class Feed extends Component {
 
         socket.on('like', (postJSON) =>{
             const { data: likedPost, meta } = JSON.parse(postJSON);
-
             if (
-                `${currentUserFirstName} ${ currentUserLastName}`
-                !== '${meta.authorFirstName} ${meta.authorLastName}'
+                `${currentUserFirstName} ${currentUserLastName}`
+                !== `${meta.authorFirstName} ${meta.authorLastName}`
             ) {
                 this.setState(({ posts }) => ({
                     posts: posts.map((post) => post.id === likedPost.id ? likedPost : post),
@@ -214,6 +214,7 @@ export default class Feed extends Component {
                     onEnter = { this._animateComposerEnter } >
                     <Composer _createPost = {  this._createPost } />
                 </Transition>
+                <Counter count = { this.state.posts.length } />
                 <TransitionGroup>{ postsJSX }</TransitionGroup>
                 <Transition
                     appear
